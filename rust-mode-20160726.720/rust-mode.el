@@ -1,7 +1,7 @@
 ;;; rust-mode.el --- A major emacs mode for editing Rust source code -*-lexical-binding: t-*-
 
 ;; Version: 0.2.0
-;; Package-Version: 20160721.818
+;; Package-Version: 20160726.720
 ;; Author: Mozilla
 ;; Url: https://github.com/rust-lang/rust-mode
 ;; Keywords: languages
@@ -1259,8 +1259,10 @@ This is written mainly to be used as `end-of-defun-function' for Rust."
     (erase-buffer)
     (insert-buffer-substring buf)
     (if (zerop (call-process-region (point-min) (point-max) rust-rustfmt-bin t t nil))
-        (progn (copy-to-buffer buf (point-min) (point-max))
-               (kill-buffer))
+        (progn
+          (if (not (string= (buffer-string) (with-current-buffer buf (buffer-string))))
+              (copy-to-buffer buf (point-min) (point-max)))
+          (kill-buffer))
       (error "Rustfmt failed, see *rustfmt* buffer for details"))))
 
 (defun rust-format-buffer ()
