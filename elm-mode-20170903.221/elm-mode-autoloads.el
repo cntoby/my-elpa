@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "elm-format" "elm-format.el" (22955 30494 0
+;;;### (autoloads nil "elm-format" "elm-format.el" (22956 60482 0
 ;;;;;;  0))
 ;;; Generated autoloads from elm-format.el
 
@@ -14,7 +14,7 @@ Apply `elm-format' to the current buffer.
 
 ;;;***
 
-;;;### (autoloads nil "elm-indent" "elm-indent.el" (22955 30494 0
+;;;### (autoloads nil "elm-indent" "elm-indent.el" (22956 60482 0
 ;;;;;;  0))
 ;;; Generated autoloads from elm-indent.el
 
@@ -44,8 +44,8 @@ Invokes `elm-indent-hook' if not nil.
 
 ;;;***
 
-;;;### (autoloads nil "elm-interactive" "elm-interactive.el" (22955
-;;;;;;  30494 0 0))
+;;;### (autoloads nil "elm-interactive" "elm-interactive.el" (22956
+;;;;;;  60482 0 0))
 ;;; Generated autoloads from elm-interactive.el
 
 (autoload 'elm-interactive-mode "elm-interactive" "\
@@ -195,7 +195,7 @@ Run the elm-test command on the current project.
 
 ;;;***
 
-;;;### (autoloads nil "elm-mode" "elm-mode.el" (22955 30494 0 0))
+;;;### (autoloads nil "elm-mode" "elm-mode.el" (22956 60482 0 0))
 ;;; Generated autoloads from elm-mode.el
 
 (autoload 'elm-mode "elm-mode" "\
@@ -207,7 +207,7 @@ Major mode for editing Elm source code.
 
 ;;;***
 
-;;;### (autoloads nil "elm-tags" "elm-tags.el" (22955 30494 0 0))
+;;;### (autoloads nil "elm-tags" "elm-tags.el" (22956 60482 0 0))
 ;;; Generated autoloads from elm-tags.el
 
 (autoload 'elm-mode-goto-tag-at-point "elm-tags" "\
@@ -223,7 +223,7 @@ Generate a TAGS file for the current project.
 ;;;***
 
 ;;;### (autoloads nil nil ("elm-font-lock.el" "elm-imenu.el" "elm-mode-pkg.el"
-;;;;;;  "elm-util.el") (22955 30494 0 0))
+;;;;;;  "elm-util.el") (22956 60482 0 0))
 
 ;;;***
 
