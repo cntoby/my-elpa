@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "org-journal" "org-journal.el" (23265 42657
-;;;;;;  956368 68000))
+;;;### (autoloads nil "org-journal" "org-journal.el" (23276 7913
+;;;;;;  978419 691000))
 ;;; Generated autoloads from org-journal.el
 
 (autoload 'org-journal-update-auto-mode-alist "org-journal" "\
