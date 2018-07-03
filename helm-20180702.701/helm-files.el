@@ -611,13 +611,15 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
    "Find alternate file `C-x C-v'" 'find-alternate-file
    "Ediff File `C-c ='" 'helm-find-files-ediff-files
    "Ediff Merge File `M-='" 'helm-find-files-ediff-merge-files
-   (lambda () (format "Delete File(s)%s (C-u no trash)" (if (eq helm-ff-delete-files-function
-                                                 'helm-delete-marked-files)
-                                             " `M-D'" "")))
+   (lambda () (format "Delete File(s)%s (C-u no trash)"
+                      (if (eq helm-ff-delete-files-function
+                              'helm-delete-marked-files)
+                          " `M-D'" "")))
    'helm-delete-marked-files
-   (lambda () (format "Delete File(s) async%s (C-u no trash)" (if (eq helm-ff-delete-files-function
-                                                       'helm-delete-marked-files-async)
-                                                    " `M-D'" "")))
+   (lambda () (format "Delete File(s) async%s (C-u no trash)"
+                      (if (eq helm-ff-delete-files-function
+                              'helm-delete-marked-files-async)
+                          " `M-D'" "")))
    'helm-delete-marked-files-async
    "Touch File(s) `M-T'" 'helm-ff-touch-files
    "Copy file(s) `M-C, C-u to follow'" 'helm-find-files-copy
@@ -2658,39 +2660,6 @@ Note that only existing directories are saved here."
   "Check if FILE is `.' or `..'."
   (member (helm-basename file) '("." "..")))
 
-(defun helm-ff-quick-delete (_candidate)
-  "Delete file CANDIDATE without quitting.
-
-When a prefix arg is given, files are deleted and not trashed even if
-\`delete-by-moving-to-trash' is non nil."
-  (with-helm-window
-    (let ((marked (helm-marked-candidates)))
-      (unwind-protect
-           (cl-loop for c in marked do
-                    (progn (helm-preselect
-                            (concat "^" (regexp-quote
-                                         (if (and helm-ff-transformer-show-only-basename
-                                                  (not (helm-ff-dot-file-p c)))
-                                             (helm-basename c) c))))
-                           (when (y-or-n-p
-                                  (format "Really %s file `%s'? "
-                                          (if (and delete-by-moving-to-trash
-                                                   (null current-prefix-arg))
-                                              "Trash" "Delete")
-                                          (abbreviate-file-name c)))
-                             (helm-delete-file
-                              c helm-ff-signal-error-on-dot-files 'synchro)
-                             (helm-delete-current-selection)
-                             (message nil)
-                             (helm--remove-marked-and-update-mode-line c))))
-        (setq helm-marked-candidates nil
-              helm-visible-mark-overlays nil)
-        (helm-force-update
-         (let ((presel (helm-get-selection)))
-           (concat "^" (regexp-quote (if (and helm-ff-transformer-show-only-basename
-                                              (not (helm-ff-dot-file-p presel)))
-                                         (helm-basename presel) presel)))))))))
-
 (defun helm-ff-kill-buffer-fname (candidate)
   (let* ((buf      (get-file-buffer candidate))
          (buf-name (buffer-name buf)))
@@ -3697,7 +3666,41 @@ following files to destination."
         when (and bfn (string= name bfn))
         collect (buffer-name buf)))
 
-(defun helm-delete-file (file &optional error-if-dot-file-p synchro)
+(defun helm-ff-quick-delete (_candidate)
+  "Delete file CANDIDATE without quitting.
+
+When a prefix arg is given, files are deleted and not trashed even if
+\`delete-by-moving-to-trash' is non nil."
+  (with-helm-window
+    (let ((marked (helm-marked-candidates)))
+      (unwind-protect
+           (cl-loop with trash = (and delete-by-moving-to-trash
+                                      (null current-prefix-arg)
+                                      (null (file-remote-p (car marked))))
+                    for c in marked do
+                    (progn (helm-preselect
+                            (concat "^" (regexp-quote
+                                         (if (and helm-ff-transformer-show-only-basename
+                                                  (not (helm-ff-dot-file-p c)))
+                                             (helm-basename c) c))))
+                           (when (y-or-n-p
+                                  (format "Really %s file `%s'? "
+                                          (if trash "Trash" "Delete")
+                                          (abbreviate-file-name c)))
+                             (helm-delete-file
+                              c helm-ff-signal-error-on-dot-files 'synchro trash)
+                             (helm-delete-current-selection)
+                             (message nil)
+                             (helm--remove-marked-and-update-mode-line c))))
+        (setq helm-marked-candidates nil
+              helm-visible-mark-overlays nil)
+        (helm-force-update
+         (let ((presel (helm-get-selection)))
+           (concat "^" (regexp-quote (if (and helm-ff-transformer-show-only-basename
+                                              (not (helm-ff-dot-file-p presel)))
+                                         (helm-basename presel) presel)))))))))
+
+(defun helm-delete-file (file &optional error-if-dot-file-p synchro trash)
   "Delete FILE after querying the user.
 
 When a prefix arg is given, files are deleted and not trashed even if
@@ -3720,9 +3723,11 @@ Ask to kill buffers associated with that file, too."
     (let ((buffers (helm-file-buffers file))
           (helm--reading-passwd-or-string t)
           (file-attrs (file-attributes file))
-          (trash (and delete-by-moving-to-trash
-                      (null helm-current-prefix-arg)
-                      (null current-prefix-arg))))
+          (trash (or trash
+                     (and delete-by-moving-to-trash
+                          (null helm-current-prefix-arg)
+                          (null current-prefix-arg)
+                          (null (file-remote-p file))))))
       (cond ((and (eq (nth 0 file-attrs) t)
                   (directory-files file t dired-re-no-dot))
              ;; Synchro means persistent deletion from HFF.
@@ -3763,8 +3768,9 @@ Ask to kill buffers associated with that file, too."
   (let* ((files (helm-marked-candidates :with-wildcard t))
          (len 0)
          (trash (and delete-by-moving-to-trash
-                      (null helm-current-prefix-arg)
-                      (null current-prefix-arg)))
+                     (null helm-current-prefix-arg)
+                     (null current-prefix-arg)
+                     (null (file-remote-p (car files)))))
          (prmt (if trash "Trash" "Delete"))
          (old--allow-recursive-deletes helm-ff-allow-recursive-deletes))
     (with-helm-display-marked-candidates
@@ -3777,7 +3783,7 @@ Ask to kill buffers associated with that file, too."
                (cl-dolist (i files)
                  (set-text-properties 0 (length i) nil i)
                  (let ((res (helm-delete-file
-                             i helm-ff-signal-error-on-dot-files)))
+                             i helm-ff-signal-error-on-dot-files nil trash)))
                    (if (eq res 'skip)
                        (progn (message "Directory is not empty, skipping")
                               (sleep-for 1))
@@ -3835,7 +3841,8 @@ always deleted with no warnings."
   (let* ((files (helm-marked-candidates :with-wildcard t))
          (trash (and delete-by-moving-to-trash
                      (null helm-current-prefix-arg)
-                     (null current-prefix-arg)))
+                     (null current-prefix-arg)
+                     (null (file-remote-p (car files)))))
          (prmt (if trash "Trash" "Delete"))
          (buffers (cl-loop for file in files
                            for buf = (helm-file-buffers file)
