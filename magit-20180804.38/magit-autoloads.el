@@ -2508,7 +2508,7 @@ command which is about to be called are committed.
 (autoload 'magit-wip-commit-initial-backup "magit-wip" "\
 Before saving, commit current file to a worktree wip ref.
 
-The user has to add this function to `backup-buffer'.
+The user has to add this function to `before-save-hook'.
 
 Commit the current state of the visited file before saving the
 current buffer to that file.  This backs up the same version of
